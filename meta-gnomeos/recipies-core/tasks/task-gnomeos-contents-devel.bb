@@ -41,6 +41,9 @@ RDEPENDS_${PN} += "     \
 	 ldd \
 	 file \
 	 elfutils \
+	 libdw \
+	 libelf \
+	 libasm \
 	 valgrind \
 	 python-dev \
 	 python3-dev \
@@ -107,6 +110,9 @@ RDEPENDS_${PN} += "     \
 	 python-six \
 	 cyrus-sasl-dev \
 	 elfutils-dev \
+	 libdw-dev \
+	 libelf-dev \
+	 libasm-dev \
 	 libelf-dev \
 	 libasm-dev \
 	 libdw-dev \

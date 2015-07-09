@@ -125,6 +125,9 @@ RDEPENDS_${PN} += "\
          syslinux-misc \
 	 cyrus-sasl \
 	 elfutils \
+	 libdw \
+	 libelf \
+	 libasm \
          ca-certificates \
          libgcrypt \
 	 perl-module-text-csv \
