@@ -25,7 +25,7 @@ python () {
 KBRANCH = "standard/base"
 KMETA = "meta"
 
-SRC_URI = "git://git.yoctoproject.org/linux-yocto-dev;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
+SRC_URI = "git://git.yoctoproject.org/linux-yocto-dev.git;bareclone=1;branch=${KBRANCH},${KMETA};name=machine,meta"
 
 # Set default SRCREVs. Both the machine and meta SRCREVs are statically set
 # to the korg v3.7 tag, and hence prevent network access during parsing. If
