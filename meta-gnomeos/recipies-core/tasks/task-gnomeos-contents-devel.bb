@@ -15,6 +15,7 @@ INSANE_SKIP_${PN} = "debug-deps"
 
 RDEPENDS_${PN} += "     \
 	 autoconf \
+	 autoconf-archive \
 	 automake \
 	 bc \
 	 binutils \
