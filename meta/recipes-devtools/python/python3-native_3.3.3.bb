@@ -5,7 +5,6 @@ PYTHON_MAJMIN = "3.3"
 DISTRO_SRC_URI ?= "file://sitecustomize.py"
 DISTRO_SRC_URI_linuxstdbase = ""
 SRC_URI = "http://www.python.org/ftp/python/${PV}/Python-${PV}.tar.bz2 \
-file://12-distutils-prefix-is-inside-staging-area.patch \
 file://python-config.patch \
 file://000-cross-compile.patch \
 file://020-dont-compile-python-files.patch \
@@ -44,12 +43,13 @@ RPROVIDES += "python3-distutils-native python3-compression-native python3-textut
 
 EXTRA_OECONF_append = " --bindir=${bindir}/${PN}"
 
+EXTRA_OECONF += "STAGING_DIR=${STAGING_DIR_NATIVE}"
+export BUILD_SYS
+export HOST_SYS
+export STAGING_INCDIR
+export STAGING_LIBDIR
+
 EXTRA_OEMAKE = '\
-  BUILD_SYS="" \
-  HOST_SYS="" \
-  LIBC="" \
-  STAGING_LIBDIR=${STAGING_LIBDIR_NATIVE} \
-  STAGING_INCDIR=${STAGING_INCDIR_NATIVE} \
   LIB=${baselib} \
   ARCH=${TARGET_ARCH} \
 '
