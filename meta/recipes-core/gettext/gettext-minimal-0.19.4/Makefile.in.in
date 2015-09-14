@@ -8,8 +8,8 @@
 # Please note that the actual code of GNU gettext is covered by the GNU
 # General Public License and is *not* in the public domain.
 #
-# Origin: gettext-0.18.3
-GETTEXT_MACRO_VERSION = 0.18
+# Origin: gettext-0.19
+GETTEXT_MACRO_VERSION = 0.19
 
 PACKAGE = @PACKAGE@
 VERSION = @VERSION@
@@ -33,17 +33,7 @@ gettextsrcdir = $(datadir)/gettext/po
 INSTALL = @INSTALL@
 INSTALL_DATA = @INSTALL_DATA@
 
-# We use $(mkdir_p).
-# In automake <= 1.9.x, $(mkdir_p) is defined either as "mkdir -p --" or as
-# "$(mkinstalldirs)" or as "$(install_sh) -d". For these automake versions,
-# @install_sh@ does not start with $(SHELL), so we add it.
-# In automake >= 1.10, @mkdir_p@ is derived from ${MKDIR_P}, which is defined
-# either as "/path/to/mkdir -p" or ".../install-sh -c -d". For these automake
-# versions, $(mkinstalldirs) and $(install_sh) are unused.
-mkinstalldirs = $(SHELL) @install_sh@ -d
-install_sh = $(SHELL) @install_sh@
 MKDIR_P = @MKDIR_P@
-mkdir_p = @mkdir_p@
 
 GMSGFMT_ = @GMSGFMT@
 GMSGFMT_no = @GMSGFMT@
@@ -76,6 +66,16 @@ $(DISTFILES.extra1) $(DISTFILES.extra2) $(DISTFILES.extra3)
 POTFILES = \
 
 CATALOGS = @CATALOGS@
+
+POFILESDEPS_ = $(srcdir)/$(DOMAIN).pot
+POFILESDEPS_yes = $(POFILESDEPS_)
+POFILESDEPS_no =
+POFILESDEPS = $(POFILESDEPS_$(PO_DEPENDS_ON_POT))
+
+DISTFILESDEPS_ = update-po
+DISTFILESDEPS_yes = $(DISTFILESDEPS_)
+DISTFILESDEPS_no =
+DISTFILESDEPS = $(DISTFILESDEPS_$(DIST_DEPENDS_ON_UPDATE_PO))
 
 # Makevars gets inserted here. (Don't remove this line!)
 
@@ -143,15 +143,25 @@ stamp-po: $(srcdir)/$(DOMAIN).pot
 # heuristic whether some file in the top level directory mentions "GNU xyz".
 # If GNU 'find' is available, we avoid grepping through monster files.
 $(DOMAIN).pot-update: $(POTFILES) $(srcdir)/POTFILES.in remove-potcdate.sed
-	if { if (LC_ALL=C find --version) 2>/dev/null | grep GNU >/dev/null; then \
-	       LC_ALL=C find -L $(top_srcdir) -maxdepth 1 -type f -size -10000000c -exec grep 'GNU @PACKAGE@' /dev/null '{}' ';' 2>/dev/null; \
-	     else \
-	       LC_ALL=C grep 'GNU @PACKAGE@' $(top_srcdir)/* 2>/dev/null; \
-	     fi; \
-	   } | grep -v 'libtool:' >/dev/null; then \
-	  package_gnu='GNU '; \
+	package_gnu="$(PACKAGE_GNU)"; \
+	test -n "$$package_gnu" || { \
+	  if { if (LC_ALL=C find --version) 2>/dev/null | grep GNU >/dev/null; then \
+		 LC_ALL=C find -L $(top_srcdir) -maxdepth 1 -type f \
+			       -size -10000000c -exec grep 'GNU @PACKAGE@' \
+			       /dev/null '{}' ';' 2>/dev/null; \
+	       else \
+		 LC_ALL=C grep 'GNU @PACKAGE@' $(top_srcdir)/* 2>/dev/null; \
+	       fi; \
+	     } | grep -v 'libtool:' >/dev/null; then \
+	     package_gnu=yes; \
+	   else \
+	     package_gnu=no; \
+	   fi; \
+	}; \
+	if test "$$package_gnu" = "yes"; then \
+	  package_prefix='GNU '; \
 	else \
-	  package_gnu=''; \
+	  package_prefix=''; \
 	fi; \
 	if test -n '$(MSGID_BUGS_ADDRESS)' || test '$(PACKAGE_BUGREPORT)' = '@'PACKAGE_BUGREPORT'@'; then \
 	  msgid_bugs_address='$(MSGID_BUGS_ADDRESS)'; \
@@ -171,7 +181,7 @@ $(DOMAIN).pot-update: $(POTFILES) $(srcdir)/POTFILES.in remove-potcdate.sed
 	      --add-comments=TRANSLATORS: $(XGETTEXT_OPTIONS) @XGETTEXT_EXTRA_OPTIONS@ \
 	      --files-from=$(srcdir)/POTFILES.in \
 	      --copyright-holder='$(COPYRIGHT_HOLDER)' \
-	      --package-name="$${package_gnu}@PACKAGE@" \
+	      --package-name="$${package_prefix}@PACKAGE@" \
 	      --package-version='@VERSION@' \
 	      --msgid-bugs-address="$$msgid_bugs_address" \
 	    ;; \
@@ -199,9 +209,10 @@ $(srcdir)/$(DOMAIN).pot:
 
 # This target rebuilds a PO file if $(DOMAIN).pot has changed.
 # Note that a PO file is not touched if it doesn't need to be changed.
-$(POFILES): $(srcdir)/$(DOMAIN).pot
+$(POFILES): $(POFILESDEPS)
 	@lang=`echo $@ | sed -e 's,.*/,,' -e 's/\.po$$//'`; \
 	if test -f "$(srcdir)/$${lang}.po"; then \
+	  test -f $(srcdir)/$(DOMAIN).pot || $(MAKE) $(srcdir)/$(DOMAIN).pot; \
 	  test "$(srcdir)" = . && cdcmd="" || cdcmd="cd $(srcdir) && "; \
 	  echo "$${cdcmd}$(MSGMERGE_UPDATE) $(MSGMERGE_OPTIONS) --lang=$${lang} $${lang}.po $(DOMAIN).pot"; \
 	  cd $(srcdir) \
@@ -221,7 +232,7 @@ install: install-exec install-data
 install-exec:
 install-data: install-data-@USE_NLS@
 	if test "$(PACKAGE)" = "gettext-tools"; then \
-	  $(mkdir_p) $(DESTDIR)$(gettextsrcdir); \
+	  $(MKDIR_P) $(DESTDIR)$(gettextsrcdir); \
 	  for file in $(DISTFILES.common) Makevars.template; do \
 	    $(INSTALL_DATA) $(srcdir)/$$file \
 			    $(DESTDIR)$(gettextsrcdir)/$$file; \
@@ -239,7 +250,7 @@ install-data-yes: all
 	  cat=`basename $$cat`; \
 	  lang=`echo $$cat | sed -e 's/\.gmo$$//'`; \
 	  dir=$(localedir)/$$lang/LC_MESSAGES; \
-	  $(mkdir_p) $(DESTDIR)$$dir; \
+	  $(MKDIR_P) $(DESTDIR)$$dir; \
 	  if test -r $$cat; then realcat=$$cat; else realcat=$(srcdir)/$$cat; fi; \
 	  $(INSTALL_DATA) $$realcat $(DESTDIR)$$dir/$(DOMAIN).mo; \
 	  echo "installing $$realcat as $(DESTDIR)$$dir/$(DOMAIN).mo"; \
@@ -279,7 +290,7 @@ installdirs: installdirs-exec installdirs-data
 installdirs-exec:
 installdirs-data: installdirs-data-@USE_NLS@
 	if test "$(PACKAGE)" = "gettext-tools"; then \
-	  $(mkdir_p) $(DESTDIR)$(gettextsrcdir); \
+	  $(MKDIR_P) $(DESTDIR)$(gettextsrcdir); \
 	else \
 	  : ; \
 	fi
@@ -290,7 +301,7 @@ installdirs-data-yes:
 	  cat=`basename $$cat`; \
 	  lang=`echo $$cat | sed -e 's/\.gmo$$//'`; \
 	  dir=$(localedir)/$$lang/LC_MESSAGES; \
-	  $(mkdir_p) $(DESTDIR)$$dir; \
+	  $(MKDIR_P) $(DESTDIR)$$dir; \
 	  for lc in '' $(EXTRA_LOCALE_CATEGORIES); do \
 	    if test -n "$$lc"; then \
 	      if (cd $(DESTDIR)$(localedir)/$$lang && LC_ALL=C ls -l -d $$lc 2>/dev/null) | grep ' -> ' >/dev/null; then \
@@ -362,7 +373,7 @@ maintainer-clean: distclean
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 dist distdir:
-	$(MAKE) update-po
+	test -z "$(DISTFILESDEPS)" || $(MAKE) $(DISTFILESDEPS)
 	@$(MAKE) dist2
 # This is a separate target because 'update-po' must be executed before.
 dist2: stamp-po $(DISTFILES)
