@@ -117,4 +117,5 @@ RDEPENDS_${PN} += "     \
 	 libelf-dev \
 	 libasm-dev \
 	 libdw-dev \
+	 libsmbclient-dev \
 	 "

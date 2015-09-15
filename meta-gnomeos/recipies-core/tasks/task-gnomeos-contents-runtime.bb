@@ -131,4 +131,5 @@ RDEPENDS_${PN} += "\
          ca-certificates \
          libgcrypt \
 	 perl-module-text-csv \
+	 libsmbclient \
 	 "
