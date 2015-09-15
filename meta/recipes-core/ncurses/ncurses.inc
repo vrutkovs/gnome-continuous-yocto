@@ -36,13 +36,13 @@ base_libdir_class-native = "${libdir}"
 # these settings for 32 and 64 bit hosts.
 EXCONFIG_ARGS = ""
 EXCONFIG_ARGS_class-native = " \
-		--disable-lp64 \
-		--with-chtype='long' \
-		--with-mmask-t='long'"
+    --disable-lp64 \
+    --with-chtype='long' \
+    --with-mmask-t='long'"
 EXCONFIG_ARGS_class-nativesdk = " \
-		--disable-lp64 \
-		--with-chtype='long' \
-		--with-mmask-t='long'"
+    --disable-lp64 \
+    --with-chtype='long' \
+    --with-mmask-t='long'"
 
 PACKAGES_DYNAMIC = "^${PN}-lib.*"
 
@@ -62,31 +62,31 @@ EX_TERMINFO_class-nativesdk = ":/etc/terminfo:/usr/share/terminfo:/usr/share/mis
 # $1 the directory to run configure in
 # $@ the arguments to pass to configure
 ncurses_configure() {
-	mkdir -p $1
-	cd $1
-	shift
-	oe_runconf \
-	        --disable-static \
-	        --without-debug \
-	        --without-ada \
-	        --without-gpm \
-	        --enable-hard-tabs \
-	        --enable-xmc-glitch \
-	        --enable-colorfgbg \
-	        --with-termpath='${sysconfdir}/termcap:${datadir}/misc/termcap${EX_TERMCAP}' \
-	        --with-terminfo-dirs='${sysconfdir}/terminfo:${datadir}/terminfo${EX_TERMINFO}' \
-	        --with-shared \
-	        --disable-big-core \
-	        --program-prefix= \
-	        --with-ticlib \
-	        --with-termlib=tinfo \
-	        --enable-sigwinch \
-	        --enable-pc-files \
-	        --disable-rpath-hack \
-		${EXCONFIG_ARGS} \
-	        --with-manpage-format=normal \
-	        "$@" || return 1
-	cd ..
+  mkdir -p $1
+  cd $1
+  shift
+  oe_runconf \
+          --disable-static \
+          --without-debug \
+          --without-ada \
+          --without-gpm \
+          --enable-hard-tabs \
+          --enable-xmc-glitch \
+          --enable-colorfgbg \
+          --with-termpath='${sysconfdir}/termcap:${datadir}/misc/termcap${EX_TERMCAP}' \
+          --with-terminfo-dirs='${sysconfdir}/terminfo:${datadir}/terminfo${EX_TERMINFO}' \
+          --with-shared \
+          --disable-big-core \
+          --program-prefix= \
+          --with-ticlib \
+          --with-termlib=tinfo \
+          --enable-sigwinch \
+          --enable-pc-files \
+          --disable-rpath-hack \
+    ${EXCONFIG_ARGS} \
+          --with-manpage-format=normal \
+          "$@" || return 1
+  cd ..
 }
 
 # Override the function from the autotools class; ncurses requires a
@@ -97,14 +97,16 @@ do_configure() {
         # broken because it requires stdin to be pollable (which is
         # not the case for /dev/null redirections)
         export cf_cv_working_poll=yes
-	#Remove ${includedir} from CPPFLAGS, need for cross compile
-	sed -i 's#-I${cf_includedir}##g' ${S}/configure || die "sed CPPFLAGS"
+  #Remove ${includedir} from CPPFLAGS, need for cross compile
+  sed -i 's#-I${cf_includedir}##g' ${S}/configure || die "sed CPPFLAGS"
 
-	( cd ${S}; gnu-configize --force )
-	ncurses_configure "narrowc" || \
-		return 1
-	! ${ENABLE_WIDEC} || \
-		ncurses_configure "widec" "--enable-widec" "--without-progs"
+  # The --enable-pc-files requires PKG_CONFIG_LIBDIR existed
+  mkdir -p ${PKG_CONFIG_LIBDIR}
+  ( cd ${S}; gnu-configize --force )
+  ncurses_configure "narrowc" || \
+    return 1
+  ! ${ENABLE_WIDEC} || \
+    ncurses_configure "widec" "--enable-widec" "--without-progs"
 
 }
 
@@ -235,8 +237,8 @@ do_install() {
         if [ -d "${D}${includedir}/ncurses" ]; then
             for f in `find ${D}${includedir}/ncurses -name "*.h"`
             do
-	        f=`basename $f`
-	        test -e ${D}${includedir}/$f && continue
+          f=`basename $f`
+          test -e ${D}${includedir}/$f && continue
                 ln -sf ncurses/$f ${D}${includedir}/$f
             done
         fi
