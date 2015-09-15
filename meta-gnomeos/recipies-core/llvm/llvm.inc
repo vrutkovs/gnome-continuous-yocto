@@ -2,14 +2,16 @@ DESCRIPTION = "The Low Level Virtual Machine"
 HOMEPAGE = "http://llvm.org"
 # 3-clause BSD-like
 LICENSE = "NCSA"
-LIC_FILES_CHKSUM = "file://LICENSE.TXT;md5=71df953c321b5b31ae94316a7fb6a7f3"
+LIC_FILES_CHKSUM = "file://LICENSE.TXT;md5=4c0bc17c954e99fd547528d938832bfa"
 
 DEPENDS += "llvm-native"
 DEPENDS_virtclass-native = "cmake-native python-native"
 
 INC_PR = "r1"
 
-SRC_URI = "http://llvm.org/releases/${PV}/llvm-${PV}.src.tar.gz"
+INHIBIT_PACKAGE_DEBUG_SPLIT = "1"
+
+SRC_URI = "http://llvm.org/releases/${PV}/llvm-${PV}.src.tar.xz"
 
 S = "${WORKDIR}/llvm-${PV}.src"
 
@@ -66,7 +68,7 @@ PACKAGES_virtclass-native = ""
 PACKAGES_DYNAMIC_virtclass-native = ""
 
 FILES_${PN} = " \
-            ${libdir}/lib*.so \
+            ${libdir}/lib*.so.* \
             "
 
 FILES_${PN}-dbg += "${libdir}/llvm/.debug ${bindir}/llvm/.debug"
@@ -74,18 +76,18 @@ FILES_${PN}-dbg += "${libdir}/llvm/.debug ${bindir}/llvm/.debug"
 FILES_${PN}-dev = " \
                    ${includedir} \
                    ${bindir}/* \
-                   ${libdir}/llvm/LLVMHello.so \
-                   ${libdir}/llvm/BugpointPasses.so \
-                   ${libdir}/llvm/*.a \
+                   ${libdir}/LLVMHello.so \
+                   ${libdir}/BugpointPasses.so \
+                   ${datadir}/* \
                  "
 
 do_install() {
-    cd ${OECMAKE_BUILDPATH}			      
+    cd ${OECMAKE_BUILDPATH}
     oe_runmake DESTDIR=${D} install
 }
 
 do_install_virtclass-native() {
-    cd ${OECMAKE_BUILDPATH}			      
+    cd ${OECMAKE_BUILDPATH}
     oe_runmake DESTDIR=${D} install
 }
 
